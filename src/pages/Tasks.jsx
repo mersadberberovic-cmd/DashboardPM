@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { Plus, Clock, AlertCircle, CheckCircle2, ChevronDown } from 'lucide-react';
+import { Plus, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import Header from '../components/Header';
 import { PriorityBadge, TagBadge } from '../components/Badge';
 import { getMember, getProject, tasks, projects } from '../data/mockData';
 
 const COLUMNS = [
-  { id: 'todo',        label: 'To Do',       icon: Clock,         color: 'text-slate-400', bg: 'bg-slate-50', border: 'border-slate-200' },
-  { id: 'in-progress', label: 'In Progress', icon: AlertCircle,   color: 'text-indigo-500', bg: 'bg-indigo-50', border: 'border-indigo-200' },
-  { id: 'done',        label: 'Done',        icon: CheckCircle2,  color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+  { id: 'todo',        label: 'To Do',       icon: Clock,        bg: 'bg-gray-50',   border: 'border-gray-200',  iconColor: 'text-gray-400',  dot: 'bg-gray-300' },
+  { id: 'in-progress', label: 'In Progress', icon: AlertCircle,  bg: 'bg-amber-50',  border: 'border-amber-100', iconColor: 'text-amber-500', dot: 'bg-amber-400' },
+  { id: 'done',        label: 'Done',        icon: CheckCircle2, bg: 'bg-green-50',  border: 'border-green-100', iconColor: 'text-green-500', dot: 'bg-green-400' },
 ];
 
 function TaskCard({ task }) {
@@ -16,25 +16,23 @@ function TaskCard({ task }) {
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done';
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-3.5 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing group">
-      {/* Priority + project */}
+    <div className="bg-white rounded-xl border border-green-100 p-3.5 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing group">
       <div className="flex items-center justify-between mb-2">
         <PriorityBadge priority={task.priority} />
-        <span className="text-[10px] text-slate-400 truncate ml-2 max-w-[100px]">{project?.name}</span>
+        <span className="text-[10px] text-gray-400 font-semibold truncate ml-2 max-w-[90px]">
+          {project?.name.split(' ').slice(0,2).join(' ')}
+        </span>
       </div>
 
-      {/* Title */}
-      <p className="text-sm font-medium text-slate-800 leading-snug mb-2">{task.title}</p>
+      <p className="text-xs font-semibold text-gray-800 leading-snug mb-2.5">{task.title}</p>
 
-      {/* Tags */}
       {task.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {task.tags.map(tag => <TagBadge key={tag} tag={tag} />)}
         </div>
       )}
 
-      {/* Footer */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pt-2.5 border-t border-gray-50">
         {assignee ? (
           <div
             className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold"
@@ -45,7 +43,7 @@ function TaskCard({ task }) {
           </div>
         ) : <div />}
         {task.dueDate && (
-          <span className={`text-[10px] font-medium ${isOverdue ? 'text-red-500' : 'text-slate-400'}`}>
+          <span className={`text-[10px] font-bold ${isOverdue ? 'text-red-500' : 'text-gray-400'}`}>
             {isOverdue ? '⚠ ' : ''}
             {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
@@ -66,7 +64,7 @@ export default function Tasks() {
     <div className="flex flex-col flex-1">
       <Header
         title="Task Board"
-        subtitle="Drag tasks between columns to update status"
+        subtitle="Track and manage tasks across all projects"
         action={{ label: 'Add Task', onClick: () => {} }}
       />
 
@@ -75,10 +73,10 @@ export default function Tasks() {
         <div className="flex items-center gap-2 mb-6 flex-wrap">
           <button
             onClick={() => setProjectFilter('all')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all ${
               projectFilter === 'all'
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                ? 'bg-green-500 text-white border-green-500 shadow-sm shadow-green-200'
+                : 'bg-white text-gray-500 border-green-100 hover:bg-green-50'
             }`}
           >
             All Projects
@@ -87,10 +85,10 @@ export default function Tasks() {
             <button
               key={p.id}
               onClick={() => setProjectFilter(p.id)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors truncate max-w-[180px] ${
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all truncate max-w-[180px] ${
                 projectFilter === p.id
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  ? 'bg-green-500 text-white border-green-500 shadow-sm shadow-green-200'
+                  : 'bg-white text-gray-500 border-green-100 hover:bg-green-50'
               }`}
             >
               {p.name.length > 22 ? p.name.slice(0, 22) + '…' : p.name}
@@ -98,34 +96,31 @@ export default function Tasks() {
           ))}
         </div>
 
-        {/* Kanban board */}
+        {/* Kanban */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
           {COLUMNS.map(col => {
             const colTasks = filtered.filter(t => t.status === col.id);
             const Icon = col.icon;
             return (
-              <div key={col.id} className={`rounded-xl border ${col.border} ${col.bg} p-4`}>
-                {/* Column header */}
+              <div key={col.id} className={`rounded-2xl border p-4 ${col.bg} ${col.border}`}>
                 <div className="flex items-center gap-2 mb-4">
-                  <Icon size={16} className={col.color} />
-                  <h3 className="text-sm font-semibold text-slate-700">{col.label}</h3>
-                  <span className="ml-auto text-xs bg-white border border-slate-200 text-slate-500 rounded-full px-2 py-0.5 font-medium">
+                  <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${col.dot}`} />
+                  <h3 className="text-xs font-bold text-gray-700">{col.label}</h3>
+                  <span className="ml-auto text-[10px] font-bold bg-white border border-gray-200 text-gray-500 rounded-full px-2 py-0.5">
                     {colTasks.length}
                   </span>
                 </div>
 
-                {/* Cards */}
                 <div className="space-y-3 min-h-[80px]">
                   {colTasks.map(task => <TaskCard key={task.id} task={task} />)}
                   {colTasks.length === 0 && (
-                    <div className="flex items-center justify-center py-8 text-slate-400">
-                      <p className="text-xs">No tasks here</p>
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-xs text-gray-400 font-semibold">No tasks here</p>
                     </div>
                   )}
                 </div>
 
-                {/* Add task button */}
-                <button className="w-full mt-3 flex items-center justify-center gap-1.5 py-2 text-xs text-slate-400 hover:text-slate-600 hover:bg-white rounded-lg border border-dashed border-slate-300 transition-colors">
+                <button className="w-full mt-3 flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-gray-400 hover:text-green-600 hover:bg-white rounded-xl border border-dashed border-gray-200 hover:border-green-300 transition-all">
                   <Plus size={13} /> Add task
                 </button>
               </div>

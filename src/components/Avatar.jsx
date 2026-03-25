@@ -12,7 +12,7 @@ export default function Avatar({ userId, size = 'md', showName = false }) {
   };
 
   return (
-    <div className={`flex items-center gap-2`}>
+    <div className="flex items-center gap-2">
       <div
         className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold text-white flex-shrink-0`}
         style={{ backgroundColor: member.color }}
@@ -21,7 +21,7 @@ export default function Avatar({ userId, size = 'md', showName = false }) {
         {member.avatar}
       </div>
       {showName && (
-        <span className="text-sm text-slate-700 font-medium">{member.name}</span>
+        <span className="text-sm text-gray-800 font-semibold">{member.name}</span>
       )}
     </div>
   );
@@ -53,7 +53,7 @@ export function AvatarGroup({ userIds, max = 4, size = 'sm' }) {
         );
       })}
       {extra > 0 && (
-        <div className={`${sizeClasses[size]} rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-slate-600 font-bold`}>
+        <div className={`${sizeClasses[size]} rounded-full border-2 border-white bg-green-100 flex items-center justify-center text-green-700 font-bold text-[10px]`}>
           +{extra}
         </div>
       )}
