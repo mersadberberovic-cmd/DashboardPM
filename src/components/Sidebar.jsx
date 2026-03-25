@@ -19,20 +19,8 @@ export default function Sidebar() {
     <aside className="fixed inset-y-0 left-0 w-60 bg-white border-r border-green-100 flex flex-col z-30">
 
       {/* Logo area */}
-      <div className="flex items-center gap-3 px-5 h-16 border-b border-green-100">
-        {/* Logo placeholder — swap this <div> for an <img> when you have your logo */}
-        <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center flex-shrink-0">
-          {/* Replace contents with: <img src="/logo.svg" alt="Logo" className="w-8 h-8" /> */}
-          <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-white" stroke="currentColor" strokeWidth="2.5">
-            <path d="M12 2L2 7l10 5 10-5-10-5z" />
-            <path d="M2 17l10 5 10-5" />
-            <path d="M2 12l10 5 10-5" />
-          </svg>
-        </div>
-        <div>
-          <p className="text-gray-900 font-bold text-sm leading-tight tracking-wide">AgencyHQ</p>
-          <p className="text-green-600 text-[10px] font-medium tracking-wider uppercase">Dashboard</p>
-        </div>
+      <div className="flex items-center px-4 h-16 border-b border-green-100">
+        <img src="/logo.svg" alt="Instadigital" className="h-9 w-auto" />
       </div>
 
       {/* Nav */}
