@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Clock, AlertCircle, CheckCircle2, X, Trash2 } from 'lucide-react';
+import { Plus, Clock, AlertCircle, CheckCircle2, X, Trash2, Pencil, PauseCircle, Link } from 'lucide-react';
 import Header from '../components/Header';
 import { PriorityBadge, TagBadge } from '../components/Badge';
 import { getMember, getProject, tasks as mockTasks, projects, teamMembers } from '../data/mockData';
@@ -23,11 +23,13 @@ const COLUMNS = [
   { id: 'todo',        label: 'To Do',       icon: Clock,        bg: 'bg-gray-50',   border: 'border-gray-200',  dot: 'bg-gray-300' },
   { id: 'in-progress', label: 'In Progress', icon: AlertCircle,  bg: 'bg-amber-50',  border: 'border-amber-100', dot: 'bg-amber-400' },
   { id: 'done',        label: 'Done',        icon: CheckCircle2, bg: 'bg-green-50',  border: 'border-green-100', dot: 'bg-green-400' },
+  { id: 'on-hold',     label: 'On Hold',     icon: PauseCircle,  bg: 'bg-slate-50',  border: 'border-slate-200', dot: 'bg-slate-400' },
 ];
 
 const EMPTY_FORM = {
   title: '',
   description: '',
+  link: '',
   status: 'todo',
   priority: 'medium',
   dueDate: '',
@@ -35,7 +37,7 @@ const EMPTY_FORM = {
   projectId: '',
 };
 
-function TaskCard({ task, onDelete }) {
+function TaskCard({ task, onDelete, onEdit }) {
   const project  = getProject(task.projectId);
   const assignee = getMember(task.assignee);
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done';
@@ -49,8 +51,15 @@ function TaskCard({ task, onDelete }) {
             {project?.name.split(' ').slice(0, 2).join(' ')}
           </span>
           <button
+            onClick={() => onEdit(task)}
+            className="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-300 hover:text-green-500 transition-all ml-1"
+            title="Edit task"
+          >
+            <Pencil size={11} />
+          </button>
+          <button
             onClick={() => onDelete(task.id)}
-            className="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-300 hover:text-red-400 transition-all ml-1"
+            className="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-300 hover:text-red-400 transition-all"
             title="Delete task"
           >
             <Trash2 size={11} />
@@ -62,6 +71,20 @@ function TaskCard({ task, onDelete }) {
 
       {task.description && (
         <p className="text-[10px] text-gray-400 mb-2 leading-relaxed line-clamp-2">{task.description}</p>
+      )}
+
+      {task.link && (
+        <a
+          href={task.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          className="flex items-center gap-1 text-[10px] text-green-500 hover:text-green-700 mb-2 truncate"
+          title={task.link}
+        >
+          <Link size={9} className="flex-shrink-0" />
+          <span className="truncate">{task.link}</span>
+        </a>
       )}
 
       {task.tags && task.tags.length > 0 && (
@@ -91,27 +114,34 @@ function TaskCard({ task, onDelete }) {
   );
 }
 
-function TaskModal({ onClose, onAdd, defaultStatus }) {
-  const [form, setForm] = useState({ ...EMPTY_FORM, status: defaultStatus || 'todo' });
+function TaskModal({ onClose, onSave, initial, defaultStatus }) {
+  const isEdit = !!initial;
+  const [form, setForm] = useState(
+    isEdit
+      ? { link: '', description: '', ...initial }
+      : { ...EMPTY_FORM, status: defaultStatus || 'todo' }
+  );
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.title.trim()) return;
-    onAdd({
-      ...form,
-      id: 't' + Date.now(),
-      tags: [],
-    });
+    onSave(
+      isEdit
+        ? { ...form }
+        : { ...form, id: 't' + Date.now(), tags: form.tags || [] }
+    );
     onClose();
   };
 
+  const inputCls = 'w-full text-xs border border-green-100 rounded-xl px-3 py-2 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 text-gray-700 bg-white placeholder:text-gray-400';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl border border-green-100 shadow-2xl w-full max-w-md mx-4">
+      <div className="bg-white rounded-2xl border border-green-100 shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-green-50">
-          <h2 className="text-sm font-bold text-gray-900">Add New Task</h2>
+          <h2 className="text-sm font-bold text-gray-900">{isEdit ? 'Edit Task' : 'Add New Task'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X size={17} />
           </button>
@@ -125,20 +155,31 @@ function TaskModal({ onClose, onAdd, defaultStatus }) {
               value={form.title}
               onChange={e => set('title', e.target.value)}
               placeholder="Enter task name…"
-              className="w-full text-sm border border-green-100 rounded-xl px-3 py-2 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 text-gray-700 placeholder:text-gray-400"
+              className={inputCls + ' text-sm'}
               required
               autoFocus
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-600 mb-1.5">Description</label>
+            <label className="block text-xs font-bold text-gray-600 mb-1.5">Description / Notes</label>
             <textarea
               value={form.description}
               onChange={e => set('description', e.target.value)}
-              placeholder="Optional description…"
+              placeholder="Optional notes…"
               rows={2}
-              className="w-full text-sm border border-green-100 rounded-xl px-3 py-2 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 text-gray-700 placeholder:text-gray-400 resize-none"
+              className={inputCls + ' resize-none'}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1.5">Link (Google Doc, URL…)</label>
+            <input
+              type="text"
+              value={form.link}
+              onChange={e => set('link', e.target.value)}
+              placeholder="https://…"
+              className={inputCls}
             />
           </div>
 
@@ -148,11 +189,12 @@ function TaskModal({ onClose, onAdd, defaultStatus }) {
               <select
                 value={form.status}
                 onChange={e => set('status', e.target.value)}
-                className="w-full text-xs border border-green-100 rounded-xl px-3 py-2 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 text-gray-700 bg-white"
+                className={inputCls}
               >
                 <option value="todo">To Do</option>
                 <option value="in-progress">In Progress</option>
                 <option value="done">Done</option>
+                <option value="on-hold">On Hold</option>
               </select>
             </div>
             <div>
@@ -160,7 +202,7 @@ function TaskModal({ onClose, onAdd, defaultStatus }) {
               <select
                 value={form.priority}
                 onChange={e => set('priority', e.target.value)}
-                className="w-full text-xs border border-green-100 rounded-xl px-3 py-2 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 text-gray-700 bg-white"
+                className={inputCls}
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -176,7 +218,7 @@ function TaskModal({ onClose, onAdd, defaultStatus }) {
                 type="date"
                 value={form.dueDate}
                 onChange={e => set('dueDate', e.target.value)}
-                className="w-full text-xs border border-green-100 rounded-xl px-3 py-2 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 text-gray-700 bg-white"
+                className={inputCls}
               />
             </div>
             <div>
@@ -184,7 +226,7 @@ function TaskModal({ onClose, onAdd, defaultStatus }) {
               <select
                 value={form.assignee}
                 onChange={e => set('assignee', e.target.value)}
-                className="w-full text-xs border border-green-100 rounded-xl px-3 py-2 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 text-gray-700 bg-white"
+                className={inputCls}
               >
                 <option value="">Unassigned</option>
                 {teamMembers.map(m => (
@@ -199,7 +241,7 @@ function TaskModal({ onClose, onAdd, defaultStatus }) {
             <select
               value={form.projectId}
               onChange={e => set('projectId', e.target.value)}
-              className="w-full text-xs border border-green-100 rounded-xl px-3 py-2 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 text-gray-700 bg-white"
+              className={inputCls}
             >
               <option value="">No Project</option>
               {projects.map(p => (
@@ -220,7 +262,7 @@ function TaskModal({ onClose, onAdd, defaultStatus }) {
               type="submit"
               className="flex-1 px-4 py-2 text-xs font-bold text-white bg-green-500 hover:bg-green-600 rounded-xl transition-colors shadow-sm shadow-green-200"
             >
-              Add Task
+              {isEdit ? 'Save Changes' : 'Add Task'}
             </button>
           </div>
         </form>
@@ -234,13 +276,17 @@ export default function Tasks() {
   const [projectFilter, setProjectFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [defaultStatus, setDefaultStatus] = useState('todo');
+  const [editingTask, setEditingTask] = useState(null);
 
   const filtered = taskList.filter(t =>
     projectFilter === 'all' || t.projectId === projectFilter
   );
 
-  const addTask = (task) => {
-    const updated = [...taskList, task];
+  const saveTask = (task) => {
+    const exists = taskList.find(t => t.id === task.id);
+    const updated = exists
+      ? taskList.map(t => t.id === task.id ? task : t)
+      : [...taskList, task];
     setTaskList(updated);
     saveTasks(updated);
   };
@@ -251,8 +297,14 @@ export default function Tasks() {
     saveTasks(updated);
   };
 
-  const openModal = (status = 'todo') => {
+  const openAddModal = (status = 'todo') => {
     setDefaultStatus(status);
+    setEditingTask(null);
+    setShowModal(true);
+  };
+
+  const openEditModal = (task) => {
+    setEditingTask(task);
     setShowModal(true);
   };
 
@@ -261,13 +313,14 @@ export default function Tasks() {
       <Header
         title="Task Board"
         subtitle="Track and manage tasks across all projects"
-        action={{ label: 'Add Task', onClick: () => openModal('todo') }}
+        action={{ label: 'Add Task', onClick: () => openAddModal('todo') }}
       />
 
       {showModal && (
         <TaskModal
-          onClose={() => setShowModal(false)}
-          onAdd={addTask}
+          onClose={() => { setShowModal(false); setEditingTask(null); }}
+          onSave={saveTask}
+          initial={editingTask}
           defaultStatus={defaultStatus}
         />
       )}
@@ -317,7 +370,7 @@ export default function Tasks() {
 
                 <div className="space-y-3 min-h-[80px]">
                   {colTasks.map(task => (
-                    <TaskCard key={task.id} task={task} onDelete={deleteTask} />
+                    <TaskCard key={task.id} task={task} onDelete={deleteTask} onEdit={openEditModal} />
                   ))}
                   {colTasks.length === 0 && (
                     <div className="flex items-center justify-center py-8">
@@ -327,7 +380,7 @@ export default function Tasks() {
                 </div>
 
                 <button
-                  onClick={() => openModal(col.id)}
+                  onClick={() => openAddModal(col.id)}
                   className="w-full mt-3 flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-gray-400 hover:text-green-600 hover:bg-white rounded-xl border border-dashed border-gray-200 hover:border-green-300 transition-all"
                 >
                   <Plus size={13} /> Add task
