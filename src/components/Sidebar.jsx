@@ -1,17 +1,18 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, FolderKanban, CheckSquare, Users,
-  Calendar, BarChart2, ChevronRight,
+  Calendar, BarChart2, ChevronRight, MapPin,
 } from 'lucide-react';
 import { currentUser } from '../data/mockData';
 
 const navItems = [
-  { to: '/',         icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/projects', icon: FolderKanban,    label: 'Projects'  },
-  { to: '/tasks',    icon: CheckSquare,     label: 'Tasks'     },
-  { to: '/team',     icon: Users,           label: 'Team'      },
-  { to: '/calendar', icon: Calendar,        label: 'Calendar'  },
-  { to: '/reports',  icon: BarChart2,       label: 'Reports'   },
+  { to: '/',          icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/projects',  icon: FolderKanban,    label: 'Projects'  },
+  { to: '/tasks',     icon: CheckSquare,     label: 'Tasks'     },
+  { to: '/team',      icon: Users,           label: 'Team'      },
+  { to: '/citations', icon: MapPin,          label: 'Citations' },
+  { to: '/calendar',  icon: Calendar,        label: 'Calendar'  },
+  { to: '/reports',   icon: BarChart2,       label: 'Reports'   },
 ];
 
 export default function Sidebar() {
